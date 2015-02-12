@@ -20,7 +20,7 @@ def shingles(text,k,tokenize = False,klen = 20):
     S = dict()
     for i in range(len(text)-k):
         s = text[i:i+3]
-        if tokenize and (len(s) >= klen):
+        if tokenize and k > klen:
             s = hash(s)
         if s not in S:
             S[s] = 1
@@ -29,6 +29,8 @@ def shingles(text,k,tokenize = False,klen = 20):
     return S
 
 S3P = shingles(text3,3, True, 2)
+
+print shingles(text,3, True, 2)
 # Jaccard Similarity
 def jaccardSimilarityOfTwoDict(D1,D2):
     S1, S2 = set(D1.keys()), set(D2.keys())
@@ -66,13 +68,14 @@ Dicts = [D1, D2, D3]
 M = generateBMatrix(Dicts)
 print M
 
+Dicts = [D1,D2]
 M = generateBMatrix(Dicts, range(6))
 print M
 
 def jaccardSimilarityFromTwoArray(A1,A2):
     return float(sum(A1+A2 == 2))/sum(A1+A2 != 0)
 
-def jaccardSimilarityFromBMatrix(BM):
+def jaccardSimilarityFromBMatrix(M):
     n = shape(M)[1]
     retList = []
     for i in range(n):
@@ -100,6 +103,14 @@ def minhashing(BM, permu):
                         retList[j] = i+1
     return retList
 
+permu = [[2,3,6,5,0,1,4],
+         [3,1,0,2,5,6,4],
+         [0,2,6,5,1,4,3]]
+
+for p in permu:
+    print minhashing(BM, p)
+
+
 def signatureMatrix(BM,minhashNum = 100):
     from random import shuffle
     retMatrix = np.zeros((minhashNum,shape(BM)[1]))
@@ -109,7 +120,10 @@ def signatureMatrix(BM,minhashNum = 100):
         retMatrix[i,:] = minhashing(BM, permu)
     return retMatrix
 
-sigM = signatureMatrix(BM,1000)
+random.seed(123)
+sigM = signatureMatrix(BM)
+
+print sigM[1:5]
 
 def similarityOfSignatures(sigM):
     retList = []
@@ -121,7 +135,7 @@ def similarityOfSignatures(sigM):
     return retList
 
 print similarityOfSignatures(sigM)
-
+print jaccardSimilarityFromBMatrix(BM)
 
 # implementation
 
@@ -144,7 +158,7 @@ def QuickSig(BM,hashes):
                         retMatrix[k,j] = hs[k]
     return retMatrix
 
-print QuickSig(BM, hashes)
+QuickSig(BM, hashes)
 
 # generate random hash functions!
 _memomask = {}
@@ -162,6 +176,7 @@ def hash_function(n):
 # try it on pervious example data set with new implementation and random hashes
 BM  = np.matrix('1 0 1 0;1 0 0 1;0 1 0 1; 0 1 0 1; 0 1 0 1;1 0 1 0;1 0 1 0')
 
+random.seed(123)
 hashes = [hash_function(n) for n in range(100)]
 
 QsigM = QuickSig(BM, hashes)
@@ -184,4 +199,4 @@ def LSH(SigMatrix, bands = math.ceil(float(shape(SigMatrix)[0])/2)):
                         candidatePairs[(i,j)] += 1
     return candidatePairs
 
-print LSH(sigM, 500)
+print LSH(sigM, 50)
