@@ -200,3 +200,74 @@ def LSH(SigMatrix, bands = math.ceil(float(shape(SigMatrix)[0])/2)):
     return candidatePairs
 
 print LSH(sigM, 50)
+
+
+# distance measurements
+
+# euclidean distance
+
+def L1norm(x,y):
+    return sum(abs(x-y))
+
+def L2norm(x,y):
+    return sum((x-y)**2)**0.5
+
+def Linftynorm(x,y):
+    return sum((x-y)**infty)**(1.0/infty)
+
+
+print L1norm(np.array([1,2]),np.array([2,3]))
+
+print L2norm(np.array([1,2]),np.array([2,3]))
+
+print Linftynorm(np.array([1,2]),np.array([2,3]))
+
+# Jaccard distance for sets
+
+def jaccardDistance(set1,set2):
+    return 1 - len(set.intersection(set1,set2))*1.0/len(set.union(set1,set2))
+
+print jaccardDistance({1,2},{2,3})
+
+# cosine distance for vectors
+
+def cosineDistance(v1,v2):
+    c = dot(v1,v2)/norm(v1)/norm(v2)
+    angle = arccos(clip(c, -1, 1))
+    return angle
+
+v1 = np.array((0,1))
+v2 = np.array((1,0))
+
+print cosineDistance(v1,v2)
+
+# edit distance:
+
+def lcs(xstr, ystr):
+    if not xstr or not ystr:
+        return ""
+    x, xs, y, ys = xstr[0], xstr[1:], ystr[0], ystr[1:]
+    if x == y:
+        return x + lcs(xs, ys)
+    else:
+        return max(lcs(xstr, ys), lcs(xs, ystr), key=len)
+
+def editDistance(s1,s2):
+    return len(s1)+len(s2)-2*len(lcs(s1,s2))
+
+print editDistance('Heolld World','Hello Walled')
+
+# hamming distance
+def hammingDistance(bv1, bv2):
+    return sum(abs(bv1-bv2))
+
+bv1 = np.array([1,0,1,0,1])
+
+bv2 = np.array([1,0,0,1,1])
+
+print hammingDistance(bv1,bv2)
+
+
+import distance
+
+print distance.hamming("hamming", "hamning")

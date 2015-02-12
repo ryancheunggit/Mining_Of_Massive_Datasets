@@ -1,6 +1,30 @@
 import numpy as np
 
 # question 1
+def lcs(xstr, ystr):
+    if not xstr or not ystr:
+        return ""
+    x, xs, y, ys = xstr[0], xstr[1:], ystr[0], ystr[1:]
+    if x == y:
+        return x + lcs(xs, ys)
+    else:
+        return max(lcs(xstr, ys), lcs(xs, ystr), key=len)
+
+def editDistance(s1,s2):
+    return len(s1)+len(s2)-2*len(lcs(s1,s2))
+
+strings = ['he', 'her', 'his','hers' ]
+
+dis = {}
+for i in range(len(strings)):
+    for j in range(i+1,len(strings)):
+        d = editDistance(strings[i],strings[j])
+        if d not in dis:
+            dis[d] = 1
+        else:
+            dis[d] += 1
+
+print dis
 
 # question 2
 def minhashing(BM, permu):
@@ -79,15 +103,20 @@ print jaccardSimilarityOfTwoDict(D1,D2)
 
 # question 6
 
-tuples = [(53,10),(63,8),(56,15),(56,13)]
-points = [(0,0),(100,40)]
+tuples = np.array([[53,10],[63,8],[56,15],[56,13]])
+points = np.array([[0,0],[100,40]])
+
+def L1norm(x,y):
+    return sum(abs(x-y))
+
+def L2norm(x,y):
+    return sum((x-y)**2)**0.5
+
 for tup in tuples:
     L1 = []
     L2 = []
     for p in points:
-        l1 = abs(tup[0]-p[0])+abs(tup[1]-p[1])
-        l2 = ((tup[0]-p[0])**2 + (tup[1]-p[1])**2)**0.5
-        L1.append(l1)
-        L2.append(l2)
+        L1.append(L1norm(tup,p))
+        L2.append(L2norm(tup,p))
         #print tup,p,l1, l2
     print L1.index(min(L1))+1, L2.index(min(L2))+1
