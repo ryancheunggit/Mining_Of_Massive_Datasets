@@ -2,50 +2,34 @@
 
 def shingles(text,k):
     S = dict()
-    for i in range(len(text)-k):
-        if text[i:i+3] not in S:
-            S[text[i:i+3]] = 1
+    for i in range(len(text)-k+1):
+        if text[i:i+k] not in S:
+            S[text[i:i+k]] = 1
         else:
-            S[text[i:i+3]] += 1
+            S[text[i:i+k]] += 1
     return S
 
 text = 'The dog which chased the cat'
-
-S1 = shingles(text,3)
-
 text2 = 'The dog that chased the cat'
-
+text2 = 'The dog that \n chased the cat'
+S1 = shingles(text,3)
 S2 = shingles(text2,3)
-
-# test linebreaks
-
-text3 = 'The dog that chased \n the cat'
 S3 = shingles(text3,3)
-
 # adding tokenize when the shingles are too long
-
 def shingles(text,k,tokenize = False,klen = 20):
-    from hashlib import sha1
     S = dict()
     for i in range(len(text)-k):
         s = text[i:i+3]
-
         if tokenize and (len(s) >= klen):
-            s = sha1(s).hexdigest()
-
+            s = hash(s)
         if s not in S:
             S[s] = 1
         else:
             S[s] += 1
     return S
 
-S3prime = shingles(text3,3, True, 2)
-
-# test if the hashing result is correct compared to before
-print len(S3prime)==len(S3)
-
+S3P = shingles(text3,3, True, 2)
 # Jaccard Similarity
-
 def jaccardSimilarityOfTwoDict(D1,D2):
     S1, S2 = set(D1.keys()), set(D2.keys())
     return float(len(set.intersection(S1,S2)))/len(set.union(S1,S2))
@@ -83,12 +67,10 @@ M = generateBMatrix(Dicts)
 print M
 
 M = generateBMatrix(Dicts, range(6))
-
 print M
 
 def jaccardSimilarityFromTwoArray(A1,A2):
     return float(sum(A1+A2 == 2))/sum(A1+A2 != 0)
-
 
 def jaccardSimilarityFromBMatrix(BM):
     n = shape(M)[1]
@@ -97,7 +79,6 @@ def jaccardSimilarityFromBMatrix(BM):
         for j in range(i+1,n):
             retList.append((i,j,jaccardSimilarityFromTwoArray(M[:,i],M[:,j])))
     return retList
-
 
 print jaccardSimilarityFromBMatrix(M)
 
@@ -128,7 +109,7 @@ def signatureMatrix(BM,minhashNum = 100):
         retMatrix[i,:] = minhashing(BM, permu)
     return retMatrix
 
-sigM = signatureMatrix(BM,100000)
+sigM = signatureMatrix(BM,1000)
 
 def similarityOfSignatures(sigM):
     retList = []
@@ -163,7 +144,6 @@ def QuickSig(BM,hashes):
                         retMatrix[k,j] = hs[k]
     return retMatrix
 
-
 print QuickSig(BM, hashes)
 
 # generate random hash functions!
@@ -187,3 +167,21 @@ hashes = [hash_function(n) for n in range(100)]
 QsigM = QuickSig(BM, hashes)
 
 print similarityOfSignatures(QsigM)
+
+# LSH
+
+def LSH(SigMatrix, bands = math.ceil(float(shape(SigMatrix)[0])/2)):
+    blens = ceil(float(shape(SigMatrix)[0])/bands)
+    candidatePairs = {}
+    for b in range(int(bands)):
+        rows = SigMatrix[b*blens:min(shape(SigMatrix)[0],(b+1)*blens),:]
+        for i in range(shape(rows)[1]):
+            for j in range(i+1,shape(rows)[1]):
+                if sum(rows[:,i]==rows[:,j]) == len(rows[:,i]):
+                    if (i,j) not in candidatePairs:
+                        candidatePairs[(i,j)] = 1
+                    else:
+                        candidatePairs[(i,j)] += 1
+    return candidatePairs
+
+print LSH(sigM, 500)
