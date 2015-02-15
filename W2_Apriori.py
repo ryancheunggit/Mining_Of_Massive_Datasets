@@ -103,3 +103,37 @@ def printAssociationRule(ruleSets):
         print "{0} -> {1}, with confidence {2}".format(rule.set.items, rule.item, rule.confidence)
 
 printAssociationRule(ruleSets)
+
+
+# triangular matrix for frequent pairs
+
+def itemIntMap(market):
+    itemIntMap = {}
+    intItemMap = {}
+    for i, item in enumerate(market):
+        intItemMap[i] = item
+        itemIntMap[item] = i
+    return itemIntMap, intItemMap
+
+itemIntMap, intItemMap = itemIntMap(market)
+
+def freqList(baskets, intItemMap):
+    n = len(itemIntMap)
+    freqList = [0 for dummy in range((n**2-n)/2)]
+    for i in range(n-1):
+        for j in range(i+1, n):
+            for b in baskets:
+                if set([intItemMap[i], intItemMap[j]]).issubset(b):
+                    freqList[i*(n-(i+1)/2)+j-i-1] += 1
+    return freqList
+
+freqList = freqList(baskets, intItemMap)
+
+def freqPairsFromList(freqList, itemIntMap, p1, p2):
+    i = min(itemIntMap[p1],itemIntMap[p2])
+    j = max(itemIntMap[p1],itemIntMap[p2])
+    return freqList[i*(n-(i+1)/2)+j-i-1]
+
+print freqPairsFromList(freqList, itemIntMap, 'coke', 'juice')
+
+# tabular method
