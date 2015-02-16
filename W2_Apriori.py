@@ -226,3 +226,47 @@ def AprioriTabular(market, baskets, supportThreshold = 2):
 L, Map = AprioriTabular(market, baskets, 3)
 
 print Map  
+
+def PCY(market, baskets, supportThreshold):
+    # the first pass
+    itemCounts = dict()
+    buckets = dict()
+    frequentItems = set()
+    frequentItemSets = []
+    for basket in baskets:
+        # find frequent items
+        for item in market:
+            if set([item]).issubset(basket):
+                if item not in itemCounts:
+                    itemCounts[item] = 1
+                else:
+                    itemCounts[item] += 1
+                    # update the list of frequent items
+                    if itemCounts[item] >= supportThreshold:
+                        frequentItems.update(set([item]))
+                        
+        # find frequent buckets
+        from itertools import combinations
+        for itemPairs in combinations(basket,2 ):
+            if hash(itemPairs) not in buckets:
+                buckets[hash(itemPairs)] = 1
+            else:
+                buckets[hash(itemPairs)] += 1
+        
+        # convert bucket counts to a bit array
+        from bitarray import bitarray
+        hashedBuckets = buckets.keys()
+        bitMap = bitarray([buckets[bucket] >= supportThreshold for bucket in hashedBuckets])        
+        
+        # second pass
+        for itemPairs in combinations(frequentItems,2):
+            try:
+                ind = hashedBuckets.index(hash(itemPairs))
+            except:
+                ind = None
+            if ind and bitMap[ind]:
+                frequentItemSets.append(set(itemPairs))
+    return frequentItemSets
+    
+print PCY(market, baskets, 3)
+   
