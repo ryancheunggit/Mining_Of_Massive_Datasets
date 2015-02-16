@@ -46,7 +46,7 @@ printItemSet(itemSets)
 
 def findAllFrequentItemsets(market, baskets, supportThreshold = 0):
     itemSets = []
-    for i in range(len(market)):
+    for i in range(max([len(b) for b in baskets])):
         itemSets += frequentItemsets(market, baskets, i+1, supportThreshold)
     return itemSets
 
@@ -104,10 +104,9 @@ def printAssociationRule(ruleSets):
 
 printAssociationRule(ruleSets)
 
+# storing frequent pairs
 
-# triangular matrix for frequent pairs
-
-def itemIntMap(market):
+def itemMapInt(market):
     itemIntMap = {}
     intItemMap = {}
     for i, item in enumerate(market):
@@ -115,7 +114,33 @@ def itemIntMap(market):
         itemIntMap[item] = i
     return itemIntMap, intItemMap
 
-itemIntMap, intItemMap = itemIntMap(market)
+itemIntMap, intItemMap = itemMapInt(market)
+
+# triangular matrix for frequent pairs
+def freqMatrix(intItemMap, baskets):
+    n = len(intItemMap)
+    freqMatrix = np.zeros((n,n))
+    for i in range(n-1):
+        for j in range(i+1, n):
+            for b in baskets:
+                if set([intItemMap[i],intItemMap[j]]).issubset(b):
+                    freqMatrix[j,i] += 1
+    return freqMatrix
+
+
+freqMatrix = freqMatrix(intItemMap, baskets)
+print freqMatrix
+
+def freqPairsFromMatrix(freqMatrix, itemIntMap, p1, p2):
+    i = min(itemIntMap[p1],itemIntMap[p2])
+    j = max(itemIntMap[p1],itemIntMap[p2])
+    return freqMatrix[j,i]
+
+print freqPairsFromMatrix(freqMatrix, itemIntMap, 'coke', 'juice')
+
+# tabular method
+
+
 
 def freqList(baskets, intItemMap):
     n = len(itemIntMap)
@@ -129,11 +154,28 @@ def freqList(baskets, intItemMap):
 
 freqList = freqList(baskets, intItemMap)
 
+print freqList
+
 def freqPairsFromList(freqList, itemIntMap, p1, p2):
+    n = len(itemIntMap)
     i = min(itemIntMap[p1],itemIntMap[p2])
     j = max(itemIntMap[p1],itemIntMap[p2])
     return freqList[i*(n-(i+1)/2)+j-i-1]
 
 print freqPairsFromList(freqList, itemIntMap, 'coke', 'juice')
 
-# tabular method
+# A-Priori Algorithm
+
+def naiveApriori(market, baskets, supportThreshold = 2, numItems = 2):
+    # the first pass
+    previousMarket = market
+    for i in range(1, numItems +1):
+        currentMarket = set()
+        frequentItemSets = frequentItemsets(previousMarket, baskets, i, supportThreshold)
+        for itemset in frequentItemSets:
+            currentMarket.update(itemset.items)
+        previousMarket = currentMarket
+    return frequentItemSets
+
+frequentItemSets = naiveApriori(market, baskets, 2, 3)
+printItemSet(frequentItemSets)
