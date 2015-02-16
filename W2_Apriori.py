@@ -88,11 +88,11 @@ def findAssociationRule(market, baskets, cs, s, conf):
                 tempSet.remove(item)
                 try:
                     index = [tempSet == sSet.items for sSet in sSets].index(True)
-                    confidance = csSet.support*1.0/sSets[index].support
+                    confidence = csSet.support*1.0/sSets[index].support
                 except:
                     None
-                if index and confidance >= conf:
-                    ruleSets.append(associationRule(csSet, item, confidance ))
+                if index and confidence >= conf:
+                    ruleSets.append(associationRule(csSet, item, confidence ))
     return ruleSets
 
 ruleSets =  findAssociationRule(market, baskets, 0.4, 0.5, 0.8)
@@ -117,44 +117,56 @@ def itemMapInt(market):
 itemIntMap, intItemMap = itemMapInt(market)
 
 # triangular matrix for frequent pairs
-def freqMatrix(intItemMap, baskets):
+def freqMatrix(intItemMap, baskets, supportThreshold):
     n = len(intItemMap)
     freqMatrix = np.zeros((n,n))
+    newIntItemMap = dict()
     for i in range(n-1):
         for j in range(i+1, n):
             for b in baskets:
                 if set([intItemMap[i],intItemMap[j]]).issubset(b):
                     freqMatrix[j,i] += 1
-    return freqMatrix
+                    if freqMatrix[j,i] >= supportThreshold:
+                        if i not in newIntItemMap:
+                            newIntItemMap[i] = intItemMap[i]
+                        if j not in newIntItemMap:
+                            newIntItemMap[j] = intItemMap[j]
+    return freqMatrix, newIntItemMap
 
 
-freqMatrix = freqMatrix(intItemMap, baskets)
-print freqMatrix
+freqPairsMatrix, _  = freqMatrix(intItemMap, baskets, 2)
+print freqPairsMatrix
 
 def freqPairsFromMatrix(freqMatrix, itemIntMap, p1, p2):
     i = min(itemIntMap[p1],itemIntMap[p2])
     j = max(itemIntMap[p1],itemIntMap[p2])
     return freqMatrix[j,i]
 
-print freqPairsFromMatrix(freqMatrix, itemIntMap, 'coke', 'juice')
+print freqPairsFromMatrix(freqPairsMatrix, itemIntMap, 'coke', 'juice')
 
 # tabular method
 
 
 
-def freqList(baskets, intItemMap):
-    n = len(itemIntMap)
+def freqList(baskets, intItemMap, supportThreshold):
+    n = len(intItemMap)
     freqList = [0 for dummy in range((n**2-n)/2)]
+    newIntItemMap = dict()
     for i in range(n-1):
         for j in range(i+1, n):
             for b in baskets:
                 if set([intItemMap[i], intItemMap[j]]).issubset(b):
-                    freqList[i*(n-(i+1)/2)+j-i-1] += 1
-    return freqList
+                    freqList[int(i*(n-(i+1)/2.0)+j-i-1)] += 1
+                    if freqList[int(i*(n-(i+1)/2.0)+j-i-1)] >= supportThreshold:
+                        if i not in newIntItemMap:
+                            newIntItemMap[i] = intItemMap[i]
+                        if j not in newIntItemMap:
+                            newIntItemMap[j] = intItemMap[j]
+    return freqList, newIntItemMap
 
-freqList = freqList(baskets, intItemMap)
+freqPairsList, _ = freqList(baskets, intItemMap, 2)
 
-print freqList
+print freqPairsList
 
 def freqPairsFromList(freqList, itemIntMap, p1, p2):
     n = len(itemIntMap)
@@ -162,12 +174,11 @@ def freqPairsFromList(freqList, itemIntMap, p1, p2):
     j = max(itemIntMap[p1],itemIntMap[p2])
     return freqList[i*(n-(i+1)/2)+j-i-1]
 
-print freqPairsFromList(freqList, itemIntMap, 'coke', 'juice')
+print freqPairsFromList(freqPairsList, itemIntMap, 'coke', 'juice')
 
 # A-Priori Algorithm
 
 def naiveApriori(market, baskets, supportThreshold = 2, numItems = 2):
-    # the first pass
     previousMarket = market
     for i in range(1, numItems +1):
         currentMarket = set()
@@ -177,5 +188,41 @@ def naiveApriori(market, baskets, supportThreshold = 2, numItems = 2):
         previousMarket = currentMarket
     return frequentItemSets
 
-frequentItemSets = naiveApriori(market, baskets, 2, 3)
+frequentItemSets = naiveApriori(market, baskets, 2, 2)
 printItemSet(frequentItemSets)
+
+
+def freqItemsMapInt(frequentItems):
+    itemIntMap = {}
+    intItemMap = {}
+    for i, item in enumerate(frequentItems):
+        intItemMap[i] = item.items.copy().pop()
+        itemIntMap[item.items.copy().pop()] = i
+    return itemIntMap, intItemMap
+        
+        
+
+def AprioriMatrix(market, baskets, supportThreshold = 2):
+    # first pass through the data
+    frequentItems = frequentItemsets(market, baskets, 1, supportThreshold)
+    itemIntMap, intItemMap = freqItemsMapInt(frequentItems)
+    # second pass through the data
+    freqPairsMatrix, newIntItemMap = freqMatrix(intItemMap, baskets, supportThreshold)
+    return freqPairsMatrix, newIntItemMap
+    
+M, Map = AprioriMatrix(market, baskets, 3)
+
+print Map
+    
+
+def AprioriTabular(market, baskets, supportThreshold = 2):
+    # first pass through the data
+    frequentItems = frequentItemsets(market, baskets, 1, supportThreshold)
+    itemIntMap, intItemMap = freqItemsMapInt(frequentItems)
+    # second pass through the data
+    freqPairsList, newIntItemMap = freqList(baskets, intItemMap, supportThreshold)
+    return freqPairsList, newIntItemMap
+    
+L, Map = AprioriTabular(market, baskets, 3)
+
+print Map  

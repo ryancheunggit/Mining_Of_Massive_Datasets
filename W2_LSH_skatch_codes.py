@@ -11,15 +11,15 @@ def shingles(text,k):
 
 text = 'The dog which chased the cat'
 text2 = 'The dog that chased the cat'
-text2 = 'The dog that \n chased the cat'
+text3 = 'The dog that \n chased the cat'
 S1 = shingles(text,3)
 S2 = shingles(text2,3)
 S3 = shingles(text3,3)
 # adding tokenize when the shingles are too long
 def shingles(text,k,tokenize = False,klen = 20):
     S = dict()
-    for i in range(len(text)-k):
-        s = text[i:i+3]
+    for i in range(len(text)-k+1):
+        s = text[i:i+k]
         if tokenize and k > klen:
             s = hash(s)
         if s not in S:
