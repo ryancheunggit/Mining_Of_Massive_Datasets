@@ -199,8 +199,8 @@ def freqItemsMapInt(frequentItems):
         intItemMap[i] = item.items.copy().pop()
         itemIntMap[item.items.copy().pop()] = i
     return itemIntMap, intItemMap
-        
-        
+
+
 
 def AprioriMatrix(market, baskets, supportThreshold = 2):
     # first pass through the data
@@ -209,11 +209,11 @@ def AprioriMatrix(market, baskets, supportThreshold = 2):
     # second pass through the data
     freqPairsMatrix, newIntItemMap = freqMatrix(intItemMap, baskets, supportThreshold)
     return freqPairsMatrix, newIntItemMap
-    
+
 M, Map = AprioriMatrix(market, baskets, 3)
 
 print Map
-    
+
 
 def AprioriTabular(market, baskets, supportThreshold = 2):
     # first pass through the data
@@ -222,14 +222,15 @@ def AprioriTabular(market, baskets, supportThreshold = 2):
     # second pass through the data
     freqPairsList, newIntItemMap = freqList(baskets, intItemMap, supportThreshold)
     return freqPairsList, newIntItemMap
-    
+
 L, Map = AprioriTabular(market, baskets, 3)
 
-print Map  
+print Map
 
+# PCY Algorithm
 def PCY(market, baskets, supportThreshold):
     # the first pass
-    itemCounts = dict()
+    Counts = dict()
     buckets = dict()
     frequentItems = set()
     frequentItemSets = []
@@ -237,14 +238,14 @@ def PCY(market, baskets, supportThreshold):
         # find frequent items
         for item in market:
             if set([item]).issubset(basket):
-                if item not in itemCounts:
-                    itemCounts[item] = 1
+                if item not in Counts:
+                    Counts[item] = 1
                 else:
-                    itemCounts[item] += 1
+                    Counts[item] += 1
                     # update the list of frequent items
-                    if itemCounts[item] >= supportThreshold:
+                    if Counts[item] >= supportThreshold:
                         frequentItems.update(set([item]))
-                        
+
         # find frequent buckets
         from itertools import combinations
         for itemPairs in combinations(basket,2 ):
@@ -252,12 +253,12 @@ def PCY(market, baskets, supportThreshold):
                 buckets[hash(itemPairs)] = 1
             else:
                 buckets[hash(itemPairs)] += 1
-        
+
         # convert bucket counts to a bit array
+        '''
         from bitarray import bitarray
         hashedBuckets = buckets.keys()
-        bitMap = bitarray([buckets[bucket] >= supportThreshold for bucket in hashedBuckets])        
-        
+        bitMap = bitarray([buckets[bucket] >= supportThreshold for bucket in hashedBuckets])
         # second pass
         for itemPairs in combinations(frequentItems,2):
             try:
@@ -266,7 +267,84 @@ def PCY(market, baskets, supportThreshold):
                 ind = None
             if ind and bitMap[ind]:
                 frequentItemSets.append(set(itemPairs))
+        '''
+
+    for bucket in buckets:
+        if buckets[bucket] >= supportThreshold:
+            buckets[bucket] = True
+        else:
+            buckets[bucket] = False
+
+    # second pass
+    for itemPairs in combinations(frequentItems,2):
+        if buckets[hash(itemPairs)]:
+            frequentItemSets.append(set(itemPairs))
     return frequentItemSets
-    
+
 print PCY(market, baskets, 3)
-   
+
+# Multistage Algorithm
+
+# PCY Algorithm
+def Multistage(market, baskets, supportThreshold):
+    # the first pass
+    Counts = dict()
+    buckets = dict()
+    p2buckets = dict()
+    frequentItems = set()
+    frequentItemSets = []
+
+    def p2hash(x):
+        return hash(x)^2
+
+    for basket in baskets:
+        # find frequent items
+        for item in market:
+            if set([item]).issubset(basket):
+                if item not in Counts:
+                    Counts[item] = 1
+                else:
+                    Counts[item] += 1
+                    # update the list of frequent items
+                    if Counts[item] >= supportThreshold:
+                        frequentItems.update(set([item]))
+
+        # find frequent buckets
+        from itertools import combinations
+        for itemPairs in combinations(basket,2 ):
+            if hash(itemPairs) not in buckets:
+                buckets[hash(itemPairs)] = 1
+            else:
+                buckets[hash(itemPairs)] += 1
+    # pass 2
+    for bucket in buckets:
+        if buckets[bucket] >= supportThreshold:
+            buckets[bucket] = True
+        else:
+            buckets[bucket] = False
+
+    for basket in baskets:
+        for itemPairs in combinations(frequentItems,2):
+            if buckets[hash(itemPairs)] and set(itemPairs).issubset(basket):
+                if p2hash(itemPairs) not in p2buckets:
+                    p2buckets[p2hash(itemPairs)] = 1
+                else:
+                    p2buckets[p2hash(itemPairs)] += 1
+
+    for bucket in p2buckets:
+        if p2buckets[bucket] >= supportThreshold:
+            p2buckets[bucket] = True
+        else:
+            p2buckets[bucket] = False
+
+    # third pass
+    for itemPairs in combinations(frequentItems,2):
+        if buckets[hash(itemPairs)] and p2buckets[p2hash(itemPairs)]:
+            frequentItemSets.append(set(itemPairs))
+
+    return frequentItemSets
+
+print Multistage(market, baskets, 3)
+
+
+# Multihash
