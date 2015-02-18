@@ -141,6 +141,7 @@ def simple(market, baskets, supportThreshold, sampleSize, numSamples):
     
 candidateSets = simple(market, baskets, 4, 4, 2)
 
+print candidateSets
 # compared with true frequent itemsets
 itemSets = findAllFrequentItemsets(market, baskets, 4)
 printItemSet(itemSets)
@@ -176,3 +177,10 @@ def simpleWithValidation(market, baskets, supportThreshold, sampleSize, numSampl
     return candidateSets
     
 print simpleWithValidation(market, baskets, 4, 4, 2)
+
+itemSets = findAllFrequentItemsets(market, baskets, 4)
+printItemSet(itemSets)
+
+# SON algorithm
+
+1
