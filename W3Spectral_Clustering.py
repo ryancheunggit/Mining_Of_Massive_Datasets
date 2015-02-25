@@ -70,3 +70,31 @@ print clusterConductanceScore(G, [0,1,2])
 nodes = [0,1,2]
 
 clusterA = cluster(nodes, clusterCutScore(G, nodes), clusterConductanceScore(G, nodes))
+
+# laplacian
+
+
+A = nx.to_numpy_matrix(G)
+
+print A
+
+D = np.matrix(np.zeros((G.number_of_nodes(),G.number_of_nodes())))
+for node in G.degree():
+    D[node, node] = G.degree()[node]
+
+print D
+
+L = D-A
+
+print L
+
+def laplacianOfGraph(graph):
+    A = nx.to_numpy_matrix(G)
+    D = np.matrix(np.zeros((G.number_of_nodes(),G.number_of_nodes())))
+    for node in G.degree():
+        D[node, node] = G.degree()[node]
+    L = D-A
+    return L
+
+print laplacianOfGraph(G)
+    
