@@ -66,29 +66,33 @@ nx.draw(G)
 
 # estimate the matrix
 
-def bigClam(graph, numCommunities, maxIter = 999, param = 0.01):
+def bigClam(graph, numCommunities, maxIter = 999, stepSize = 0.01):
     # initialize a random matrix
     F = np.matrix(np.ones((len(graph.nodes()), numCommunities)))
+    for i in range(shape(F)[0]):
+        for j in range(shape(F)[1]):
+            F[i,j] = random.random()
 
     # start iterating
     for i in range(maxIter):
         # iterative over the rows of the matrix
+        Fp = F.copy()
         for row in range(shape(F)[0]):
             # calculating the gradient
             gradient = np.matrix(np.zeros((1,numCommunities)))
             u = F[row,:]
-            for col in range(numCommunities):
+            for col in G.neighbors(row):
                 v = F[col,:]
-                if col in G.neighbors(row):
-                    gradient += v*float(exp(-1*u*v.transpose())/(1-exp(-1*u*v.transpose())))
-                if col not in G.neighbors(row):
-                    gradient -= v
-
-            F[row,:] = F[row,:] + param*gradient
+                gradient += v*float(exp(-1*u*v.transpose())/(1-exp(-1*u*v.transpose())))
+            for col in [i for i in range(shape(F)[0]) if i != row and i not in G.neighbors(row)]:
+                v = F[col,:]
+                gradient -= v
+            F[row,:] = F[row,:] + stepSize*gradient
             for i in range(numCommunities):
                 if F[row,i] < 0:
                     F[row,i] = 0
-
+        if sum(np.multiply(F-Fp,F-Fp))**0.5 <= 0.01:
+            break
 
     return F
 
@@ -96,7 +100,46 @@ nodes = range(24)
 communities = [community(range(12), 0.8),
                community(range(6,17), 0.8),
                community(range(8,12)+range(17,24), 0.8)]
+random.seed(123)
 G = AGM(nodes,communities)
+print G.edges()
+
 nx.draw(G)
 F = bigClam(G, 3)
-F
+print F
+
+# improve the method by caching the summuation over all rows
+
+def bigClam2(graph, numCommunities, maxIter = 999, stepSize = 0.01):
+    # initialize a random matrix
+    F = np.matrix(np.ones((len(graph.nodes()), numCommunities)))
+    for i in range(shape(F)[0]):
+        for j in range(shape(F)[1]):
+            F[i,j] = random.random()
+
+    # start iterating
+    for i in range(maxIter):
+        # iterative over the rows of the matrix
+        Fp = F.copy()
+        colSums = np.sum(F, axis = 0)
+        for row in range(shape(F)[0]):
+            # calculating the gradient
+            u = F[row,:]
+            gradient = np.matrix(np.zeros((1,numCommunities)))
+            neighborSums = np.matrix(np.zeros((1,numCommunities)))
+            for col in G.neighbors(row):
+                v = F[col,:]
+                gradient += v*float(exp(-1*u*v.transpose())/(1-exp(-1*u*v.transpose())))
+                neighborSums += v
+            gradient -= (colSums - u - neighborSums)
+            F[row,:] = F[row,:] + stepSize*gradient
+            for i in range(numCommunities):
+                if F[row,i] < 0:
+                    F[row,i] = 0
+        if sum(np.multiply(F-Fp,F-Fp))**0.5 <= 0.01:
+            break
+
+    return F
+
+F = bigClam2(G, 2)
+print F
