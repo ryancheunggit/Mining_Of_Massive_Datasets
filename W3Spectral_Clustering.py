@@ -40,10 +40,12 @@ nx.draw_networkx(G)
 # cluster measures
 
 class cluster:
-    def __init__(self, member, cut = None):
+    def __init__(self, member, cut = None, conductance = None):
         self.member = member
         self.cut = cut
-
+        self.conductance = conductance
+        
+# cut score
 def clusterCutScore(graph, nodes):
     cutScore = 0
     for edge in graph.edges():
@@ -54,3 +56,17 @@ def clusterCutScore(graph, nodes):
 print clusterCutScore(G, [0,1,2])
 
 clusterA = cluster([0,1,2], clusterCutScore(G, [0,1,2]))
+
+# conductance
+
+def clusterConductanceScore(graph, nodes):
+    m = graph.number_of_edges()
+    volA = sum([len(graph.neighbors(node)) for node in nodes])
+    cut = clusterCutScore(graph, nodes)
+    return float(cut)/min(volA, 2*m-volA)
+
+print clusterConductanceScore(G, [0,1,2])
+
+nodes = [0,1,2]
+
+clusterA = cluster(nodes, clusterCutScore(G, nodes), clusterConductanceScore(G, nodes))
