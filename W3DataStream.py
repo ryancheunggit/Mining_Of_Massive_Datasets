@@ -25,7 +25,7 @@ print avg
 
 # DGIM
 
-# I have give up on the modulo timestamp implementation
+# I have give up on the modulo timestamp for this implementation
 
 def dgim(stream, windowSize, t = 0, buckets = dict()):
     # input n to add a new bit
@@ -33,7 +33,7 @@ def dgim(stream, windowSize, t = 0, buckets = dict()):
     # input a number ot query
     sizes = [2**i for i in range(int(round(math.log(windowSize,2))))]
     while True:
-        option = raw_input()
+        option = raw_input('e to exit; n to add 1 bit; any number to query  ')
         if option == 'n':
             # remove too old buckets
             for key in buckets.keys():
@@ -84,3 +84,65 @@ t = 101
 stream = [1 for i in range(120)]
 
 b, t = dgim(stream, windowSize, t, buckets)
+
+
+# DGIM with modulo
+
+def dgimTimeStamp(stream, windowSize, t = 0, buckets = dict()):
+    # input n to add a new bit
+    # input e to exit program
+    # input a number ot query
+    sizes = [2**i for i in range(int(round(math.log(windowSize,2))))]
+    while True:
+        option = raw_input('e to exit; n to add 1 bit; any number to query  ')
+        if option == 'n':
+            # remove too old buckets
+            timestamp = t%windowSize
+            for key in buckets.keys():
+                if key == timestamp:
+                    buckets.pop(key)
+            # adding a new bit in
+            if stream[t] == 1:
+                buckets[timestamp] = 1
+            t += 1
+            # buckets cascading updating
+            for size in sizes:
+                if sum(np.array(buckets.values()) == size) == 3:
+                    keys = [b for b in buckets.keys() if buckets[b] == size]
+                    for i in range(len(keys)):
+                        if keys[i] <= timestamp:
+                            keys[i] += windowSize
+                    keys.sort()
+                    tbr = keys[0]
+                    if tbr < windowSize:
+                        buckets.pop(tbr)
+                    else:
+                        buckets.pop(tbr - windowSize)
+                    tbm = keys[1]
+                    if tbm < windowSize:
+                        buckets[tbm] *= 2
+                    else:
+                        buckets[tbm-windowSize] *= 2
+            if t >= len(stream):
+                break
+        elif option == 'e':
+            break
+        else:
+            k = int(option)
+            keys = [i%windowSize for i in range(t-k+1,t+1)]
+            keys.sort()
+            initial = True
+            s = 0
+            for key in keys:
+                if key in buckets and initial == True:
+                    s += buckets[key]*0.5
+                    initial =False
+                if key in buckets and initial == False:
+                    s += buckets[key]
+            print s, k
+        print buckets
+
+
+    return buckets, t
+
+b, t = dgimTimeStamp(stream, 4)
