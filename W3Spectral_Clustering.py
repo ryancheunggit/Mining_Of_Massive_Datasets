@@ -89,12 +89,27 @@ L = D-A
 print L
 
 def laplacianOfGraph(graph):
-    A = nx.to_numpy_matrix(G)
-    D = np.matrix(np.zeros((G.number_of_nodes(),G.number_of_nodes())))
-    for node in G.degree():
-        D[node, node] = G.degree()[node]
+    n = graph.number_of_nodes()
+    A = nx.to_numpy_matrix(graph)
+    D = np.matrix(np.zeros((n,n)))
+    for node in graph.degree():
+        D[node, node] = graph.degree()[node]
     L = D-A
     return L
 
+def naiveSpectralClustering(graph):
+    n = graph.number_of_nodes()
+    L = laplacianOfGraph(graph)
+    evals, evecs = np.linalg.eig(L)
+    values = np.array(evecs[:,1]).reshape(-1).tolist()
+    cluster1 = [i for i in range(n) if values[i] <= 0]
+    cluster2 = [i for i in range(n) if values[i] > 0]            
+    return cluster1, cluster2
+
 print laplacianOfGraph(G)
+
+c1, c2 = naiveSpectralClustering(G)    
+print c1
+print c2
+
     
