@@ -68,8 +68,6 @@ def dgim(stream, windowSize, t = 0, buckets = dict()):
 
 random.seed(123)
 
-stream = [int(round(random.random())) for i in range(99)]
-
 stream = [1 for i in range(99)]
 windowSize = 10
 
@@ -129,20 +127,19 @@ def dgimTimeStamp(stream, windowSize, t = 0, buckets = dict()):
             break
         else:
             k = int(option)
-            keys = [i%windowSize for i in range(t-k+1,t+1)]
-            keys.sort()
+            keys = [i%windowSize for i in range(t-k,t)]
             initial = True
             s = 0
             for key in keys:
+                if key in buckets and initial == False:
+                    s += buckets[key]
                 if key in buckets and initial == True:
                     s += buckets[key]*0.5
                     initial =False
-                if key in buckets and initial == False:
-                    s += buckets[key]
-            print s, k
+            print s, t
         print buckets
 
 
     return buckets, t
 
-b, t = dgimTimeStamp(stream, 4)
+b, t = dgimTimeStamp(stream, 5)
