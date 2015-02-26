@@ -8,19 +8,19 @@ def slidingWindowAverage(stream, windowSize = 10):
     avg = mean(window)
     index = windowSize
     while True:
-        j = window.pop(0)
-        i = stream[index]
-        window.append(i)
-        index += 1
-        avg += float(i-j)/windowSize
-        if index >= len(stream):
+        option = raw_input('n for new input, e for exit: ')
+        if option == 'n':
+            j = window.pop(0)
+            i = stream[index]
+            window.append(i)
+            index += 1
+            avg += float(i-j)/windowSize
+            print 'current average value is {0}'.format(avg)
+        if index >= len(stream) or option == 'e':
             break
     return avg
 
 avg = slidingWindowAverage(stream)
-
-print mean(stream)
-print avg
 
 
 # DGIM
