@@ -44,7 +44,7 @@ class cluster:
         self.member = member
         self.cut = cut
         self.conductance = conductance
-        
+
 # cut score
 def clusterCutScore(graph, nodes):
     cutScore = 0
@@ -101,15 +101,16 @@ def naiveSpectralClustering(graph):
     n = graph.number_of_nodes()
     L = laplacianOfGraph(graph)
     evals, evecs = np.linalg.eig(L)
-    values = np.array(evecs[:,1]).reshape(-1).tolist()
+    vals = evals.copy()
+    vals.sort()
+    index =evals.tolist().index(vals[1])
+    values = np.array(evecs[:,index]).reshape(-1).tolist()
     cluster1 = [i for i in range(n) if values[i] <= 0]
-    cluster2 = [i for i in range(n) if values[i] > 0]            
+    cluster2 = [i for i in range(n) if values[i] > 0]
     return cluster1, cluster2
 
 print laplacianOfGraph(G)
 
-c1, c2 = naiveSpectralClustering(G)    
+c1, c2 = naiveSpectralClustering(G)
 print c1
 print c2
-
-    
