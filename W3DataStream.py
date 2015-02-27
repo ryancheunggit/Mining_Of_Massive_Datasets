@@ -143,3 +143,49 @@ def dgimTimeStamp(stream, windowSize, t = 0, buckets = dict()):
     return buckets, t
 
 b, t = dgimTimeStamp(stream, 5)
+
+
+# Bloom Filters
+def h1(x,length):
+    b = bin(x)[2:]
+    s = [b[i] for i in range(len(b)) if i % 2 == 0]
+    n = ''
+    for i in s:
+        n += i
+    return int(n,2)%length
+
+def h2(x,length):
+    b = bin(x)[2:]
+    s = [b[i] for i in range(len(b)) if i % 2 == 1]
+    n = ''
+    for i in s:
+        n += i
+    return int(n,2)%length
+
+hashes = [h1,h2]
+
+def bloomFilter(length = 11, hashes = []):
+    s = [0 for i in range(length)]
+    while True:
+        n = raw_input('enter a integer, filter will tell seen or not: ')
+        try:
+            n = int(n)
+        except:
+            break
+
+        location = [h(n,length) for h in hashes]
+        seen = True
+        for l in location:
+            if s[l] == 0:
+                seen = False
+        if seen == True:
+            print "has seen {} before".format(n)
+        else:
+            print "has not seen {} before".format(n)
+            for h in hashes:
+                s[h(n,length)] = 1
+    return s
+
+bloomFilter(11, hashes)
+
+# sampling a stream
