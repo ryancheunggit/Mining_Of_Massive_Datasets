@@ -59,7 +59,7 @@ def ratingPredictions(df, u, i, k, s = False):
     dfn = normalizeDF(df)
     sim = []
     for neighbor in N:
-        if cosineSimilarity(dfn, u, neighbor) > 0:
+        if abs(cosineSimilarity(dfn, u, neighbor)) > 0:
             sim.append(cosineSimilarity(dfn, u, neighbor))
         else:
             sim.append(0)
