@@ -34,15 +34,40 @@ def TFIDF(documents):
 
 F, _, _, _, _ = TFIDF(documents)
 
-M = np.matrix(F)
+M = np.matrix(F).transpose()
 
-u,s,v = np.linalg.svd(M)
+# M is the input matrix representing 4 documents and 35 terms
 
-# pca
+U,s,V = np.linalg.svd(M, full_matrices=False)
+S = np.diag(s)
+
+print np.allclose(np.identity(4), U.transpose()*U)
+print np.allclose(M, np.dot(U, np.dot(S, V)))
+
+# projection
+print (U*S).transpose()
+P = (U*S).transpose()
+
+# Dimensionality Reduction
+
+Mproj2 = np.dot(U[:,:2], S[:2,:2])
+
+print Mproj2
+
+# plot 2-D projections
+x = Mproj2[:,0].transpose().tolist()[0]
+y = Mproj2[:,1].transpose().tolist()[0]
+
+plt.plot(x,y, 'ko')
+for i in range(len(x)):
+    plt.text(x[i]+0.1,y[i]+0.1, str(i+1))
+
+Mrecov = np.dot(Mproj2, V[:2,:])
+
+print Mrecov
+# pca using scikit learn
 
 m = np.matrix([[1,1],[2,2],[3,4]])
 pca = deco.PCA(2)
 m_r = pca.fit(m).transform(m)
 print ('explained variance (first %d components): %.2f'%(2, sum(pca.explained_variance_ratio_)))
-
-
