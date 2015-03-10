@@ -1,5 +1,7 @@
 from stemming import porter
 import numpy as np
+from numpy.linalg import pinv
+
 
 documents = ['this is the first document, this really is',
              'nothing will stop this from been the second doument, second is not a bad order',
@@ -36,20 +38,24 @@ F, _, _, _, _ = TFIDF(documents)
 
 M = np.matrix(F).transpose()
 
-def CUR(M, c, r):
-
+def columnSelect(M,c):
     M2 = np.multiply(M,M)
-    rP = M2.sum(axis = 1)
-    rP /= rP.sum()
     cP = M2.sum(axis = 0)
     cP /= cP.sum()
-
     C = np.random.choice(range(shape(M)[1]), size = c, replace = True, p = cP.tolist()[0])
     Cd = M[:,C] * np.diag(np.sqrt(1.0/c*cP[:,C]).tolist()[0])
+    return Cd
+    
 
-    R = np.random.choice(range(shape(M)[0]), size = r, replace = True, p = rP.transpose().tolist()[0])
-    Rd = np.diag(np.sqrt(1.0/c*rP[R,:]).transpose().tolist()[0]) * M[R,:]
+def CUR(M, c, r):
+    
+    C = columnSelect(M,c)
+    R = columnSelect(M.transpose(),r).transpose()
+    U = pinv(C,c) * M * pinv(R,r)
 
-    U = pinv(Cd,c) * M * pinv(Rd,r)
+    return C, U, R
+    
 
-    return Cd, U, Rd
+np.random.seed(123)
+
+C, U, R = CUR(M, 2, 2)
